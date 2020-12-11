@@ -1,70 +1,49 @@
-from bresenham import bresenham
+import numpy as np
 
 
 class Car:
-    def __init__(self, position, velocity, acceleration, track):
-        self.position = position
-        self.velocity = velocity
-        self.acceleration = acceleration
-        self.track = track
+    def __init__(self, initial_action, epsilon=None, q_function=None):
+        self.initial_action = initial_action
+        self.current_action = initial_action
+        self.epsilon = epsilon
+        self.q_function = q_function
+        self.possible_actions = {(-1, -1), (-1, 0), (0, 0), (0, -1), (0, 1), (1, 0), (1, 1)}
 
-    def accelerate(self, action):
-        self.acceleration['x_acceleration'] = action['x_action']
-        self.acceleration['y_acceleration'] = action['y_action']
-        self.__update_velocity()
-        self.__update_position()
-        self.__update_track()
+    def set_q_function(self, function):
+        self.q_function = function
 
-    def __update_velocity(self):
-        self.velocity['x_velocity'] += self.acceleration['x_acceleration']
-        self.velocity['y_velocity'] += self.acceleration['y_acceleration']
-        if self.velocity['x_velocity'] <= 0:
-            self.velocity['x_velocity'] = max(-5, self.velocity['x_velocity'])
-        else:
-            self.velocity['x_velocity'] = min(5, self.velocity['x_velocity'])
-        if self.velocity['y_velocity'] <= 0:
-            self.velocity['y_velocity'] = max(-5, self.velocity['y_velocity'])
-        else:
-            self.velocity['y_velocity'] = min(5, self.velocity['y_velocity'])
+    def set_action(self, new_action):
+        self.current_action = new_action
 
-    def __update_position(self):
-        new_position = {'x_coordinate': self.position['x_coordinate'] + self.velocity['x_velocity'],
-                        'y_coordinate': self.position['y_coordinate'] + self.velocity['y_velocity']}
-        self.position = self.__detect_collision(self.position, new_position)
+    def take_action(self, state=None):
+        # Choose among next possible state-action pairs
+        optimal_action, optimal_value = None, np.inf
+        for action in self.possible_actions:
+            value = self.q_function[(state, action)]
+            if value < optimal_value:
+                optimal_value = value
+                optimal_action = action
+        # Choose action probabilistically
+        action_map = {
+            0: optimal_action,
+            1: (-1, -1),
+            2: (-1, 0),
+            3: (0, -1),
+            4: (0, 0),
+            5: (0, 1),
+            6: (1, 0),
+            7: (1, 10)
+        }
+        probability = self.epsilon/6.0
+        probabilities = [1 - self.epsilon] + [probability for _ in range(6)]
+        taken_action = np.random.choice([_ for _ in range(7)], p=probabilities)
+        self.current_action = action_map[taken_action]
+        self.epsilon -= 0.001
+        self.epsilon = max(self.epsilon, 0.01)
+        return self.current_action
 
-    def __detect_collision(self, old_position, new_position):
-        line = list(bresenham(old_position['x_coordinate'], old_position['y_coordinate'], new_position['x_coordinate'],
-                         new_position['y_coordinate']))
-        i = 0
-        new_position['x_coordinate'] = line[i][0]
-        new_position['y_coordinate'] = line[i][1]
-        collision = False
-        while i < len(line) and not collision:
-            if self.track[line[i][1]][line[i][0]] != '#':
-                new_position['x_coordinate'] = line[i][0]
-                new_position['y_coordinate'] = line[i][1]
-            else:
-                collision = True
-            i += 1
-        if collision:
-            self.velocity['x_velocity'] = 0
-            self.velocity['y_velocity'] = 0
-        return new_position
+    def get_current_action(self):
+        return self.current_action
 
-    def __update_track(self):
-        old_line = self.track[self.position['y_coordinate']]
-        new_line = old_line[:self.position['x_coordinate']] + 'C' + old_line[self.position['x_coordinate'] + 1:]
-        self.track[self.position['y_coordinate']] = new_line
-
-    def print_track(self):
-        for line in self.track:
-            print(line)
-
-    def get_position(self):
-        return self.position
-
-    def get_velocity(self):
-        return self.velocity
-
-    def get_acceleration(self):
-        return self.acceleration
+    def get_all_actions(self):
+        return self.possible_actions

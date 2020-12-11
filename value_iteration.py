@@ -14,7 +14,6 @@ class ValueIteration:
 
     def __initialize_values(self):
         self.values = {k: v for (k, v) in zip(self.states, np.zeros(len(self.states)))}
-        # self.values = {k: v for (k, v) in zip(self.states, [30 for _ in range(len(self.states))])}
 
     def run(self):
         self.__initialize_values()
@@ -40,8 +39,8 @@ class ValueIteration:
     def __next_states(self, state, action):
         x_velocity = min(max(state[2] + action[0], -5), 5)
         y_velocity = min(max(state[3] + action[1], -5), 5)
-        x_position = min(max(state[0] + x_velocity, 0),  24)
-        y_position = min(max(state[1] + y_velocity, 0), 24)
+        x_position = min(max(state[0] + x_velocity, 0),  27)
+        y_position = min(max(state[1] + y_velocity, 0), 29)
 
         line = list(bresenham(state[0], state[1], x_position, y_position))
         i = 0
