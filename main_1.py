@@ -2,16 +2,17 @@ from car import Car
 from racetrack import RaceTrack
 from value_iteration_1 import ValueIteration
 from q_learning_1 import QLearning
+from sarsa import Sarsa
 
 
 def main_value_iteration():
-    with open('L-track.txt') as f:
+    with open('O-track.txt') as f:
         specs = f.readline().strip().split(',')
         rows = int(specs[0])
         cols = int(specs[1])
         layout = f.read().splitlines()
 
-        initial_state = (1, 8, 0, 0)
+        initial_state = (2, 10, 0, 0)
         initial_action = (0, 0)
 
         agent = Car(initial_action)
@@ -35,13 +36,13 @@ def draw_track(path, track):
         print(line)
 
 def main():
-    with open('L-track.txt') as f:
+    with open('custom-track.txt') as f:
         specs = f.readline().strip().split(',')
         rows = int(specs[0])
         cols = int(specs[1])
         layout = f.read().splitlines()
 
-        initial_state = (1, 8, 0, 0)
+        initial_state = (2, 10, 0, 0)
         initial_action = (0, 0)
         epsilon = 0.5
 
@@ -50,10 +51,12 @@ def main():
 
         discount = 0.9
         learning_rate = 0.9
-        threshold = 10
+        threshold = 50
         max_iterations = 10000
-        q_learner = QLearning(discount, learning_rate, threshold, max_iterations, environment, agent)
-        path = q_learner.run()
+        # q_learner = QLearning(discount, learning_rate, threshold, max_iterations, environment, agent)
+        # path = q_learner.run()
+        sarsa = Sarsa(discount, learning_rate, threshold, max_iterations, environment, agent)
+        path = sarsa.run()
         draw_track(path, layout)
 
 main_value_iteration()
